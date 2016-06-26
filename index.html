@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+  body {
+    background-color: #111;
+    -webkit-user-select: none;
+      -moz-user-select: -moz-none;
+       -ms-user-select: none;
+          user-select: none;
+  }
+
+  .display {
+    position: absolute;
+    width: 60%;
+    background-color: #000;
+    height: 64px;
+    left: 20%;
+    top: 35px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .display-content {
+    display: inline;
+    color: #38C52A;
+    font-size: 56px;
+    font-style: italic;
+    line-height: 64px;
+    font-family: "Arial", sans-serif;
+    font-weight: 100;
+  }
+
+
+  .clear-btn {
+    border-radius: 10px;
+    border: 1.6px solid #776677;
+    color: #E0A5A5;
+    background-color: #AD1818;
+    font-size: 24px;
+    line-height: 64px;
+    font-family: "Arial", sans-serif;
+    font-weight: 240;
+  }
+
+  .clear-btn.active {
+    background-color: #900D0D;
+  }
+
+  .enter-btn {
+    border-radius: 10px;
+    border: 1.6px solid #143C26;
+    color: #48B95D;
+    background-color: #1E7509;
+    font-size: 24px;
+    line-height: 60px;
+    font-family: "Arial", sans-serif;
+    font-weight: 240;
+  }
+
+  .enter-btn.active {
+    background-color: #1C4812;
+  }
+
+  .keypad {
+    text-align: center;
+    position: absolute;
+    left: 0;
+    top: 130px;
+    right: 0;
+  }
+
+  .key {
+    display: inline-block;
+    width: 22%;
+    height: 50px;
+    border-radius: 10px;
+    padding: 8px 8px;
+    margin: 4px;
+  }
+
+  .key-content.active {
+    background-color: #ddd;
+  }
+
+  .key-content {
+    color: #000;
+    background-color: #fff;
+    border: 2px solid #776677;
+    font-size: 64px;
+    line-height: 36px;
+    font-family: "Arial", sans-serif;
+    font-weight: 240;
+  }
+
+  </style>
+  <title>Keypad</title>
+</head>
+
+<body>
+  <div class="display">
+    <p class="display-content"></p>
+  </div>
+  <div class="keypad">
+    <div class="key key-content">1</div>
+    <div class="key key-content">2</div>
+    <div class="key key-content">3</div>
+    <div class="key key-content">4</div>
+    <div class="key key-content">5</div>
+    <div class="key key-content">6</div>
+    <div class="key key-content">7</div>
+    <div class="key key-content">8</div>
+    <div class="key key-content">9</div>
+    <div class="key enter-btn">ENTER</div>
+    <div class="key key-content">0</div>
+    <div class="key clear-btn">DEL</div>
+  </div>
+  <script src="js/jquery.js"></script>
+  <script src="js/kik.js"></script>
+  <script>
+    if(kik.enabled){
+      kik.browser.setOrientationLock('portrait');
+    }
+    $(document).ready(function () {
+      'use strict';
+
+      var $display = $('.display-content');
+      var $result = $('.display-result')
+      var $keys = $('.key-content');
+      var $clear = $('.clear-btn');
+      var $enter = $('.enter-btn');
+
+      var text = '';
+      var maxLength = 4;
+      var correctCode = 4746;
+
+      function __init__() {
+
+        //
+        // Keys
+        //
+        $keys.each(function (i, $key) {
+          $key = $($key);
+          var keyValue = +$key.text();
+
+          function keyTouchStart (e) {
+            console.log($key);
+            console.log(keyValue);
+            $display.css({"font-size": "56px","font-style": "italic", "color": "#38C52A"});
+            e.stopPropagation();
+            e.preventDefault();
+            $key.addClass('active');
+            if (text.length < maxLength) {
+              appendDisplay(keyValue);
+            }
+          }
+
+          function keyTouchEnd (e) {
+            e.stopPropagation();
+            e.preventDefault();
+            $key.removeClass('active');
+          }
+
+          $key.on('touchstart', keyTouchStart);
+          $key.on('touchend', keyTouchEnd);
+
+
+        });
+
+        //
+        // Clear Button
+        //
+
+        function clearTouchStart (e) {
+          e.stopPropagation();
+          e.preventDefault();
+          $clear.addClass('active');
+        }
+
+        function clearTouchEnd (e) {
+          e.stopPropagation();
+          e.preventDefault();
+          popDisplay();
+          $clear.removeClass('active');
+
+        }
+
+        // Update clear button
+        $clear.on('touchstart', clearTouchStart);
+        $clear.on('touchend', clearTouchEnd);
+
+        //
+        // Enter Button
+        //
+
+        function enterTouchStart (e) {
+          $display.css({"font-size": "56px","font-style": "italic", "color": "#38C52A"});
+          e.stopPropagation();
+          e.preventDefault();
+          $enter.addClass('active');
+          if (text == correctCode) {
+            setDisplay('Access Granted');
+            text = '';
+          }
+          else {
+            setDisplay('Access Denied');
+            text = '';
+          }
+
+        }
+
+        function enterTouchEnd (e) {
+          e.stopPropagation();
+          e.preventDefault();
+          $enter.removeClass('active');
+        }
+
+        // Update clear button
+        $enter.on('touchstart', enterTouchStart);
+        $enter.on('touchend', enterTouchEnd);
+      }
+
+      function popDisplay() {
+        text = text.slice(0, -1);
+
+        // Replace with all stars
+        $display.text(text.replace(/[0-9]/g, '*'));
+      }
+
+      function appendDisplay(char) {
+        // Replace with all stars, and append latest character
+        $display.text(text.replace(/[0-9]/g, '*') + char);
+        text += char
+      }
+
+      function setDisplay(val) {
+        text = val
+        if (text == 'Access Granted'){
+          $display.css({ "font-size": "23px", "font-style": "normal"});
+          if(kik.enabled){
+            kik.browser.setOrientationLock('free');
+            setTimeout(function(){
+              kik.browser.close();
+            },250);
+          }
+        }
+        else if (text == 'Access Denied') {
+          $display.css({ "font-size": "23px", "color": "#D80000","font-style": "normal"});
+        }
+        $display.text(text);
+      }
+
+      __init__();
+      setDisplay('');
+    });
+  </script>
+
+</body>
+
+</html>
